@@ -15,7 +15,8 @@ type TurbineChartProps = {
   userPoint: UserPoint;
 };
 
-export default function TurbineChart({ turbines, userPoint }) {
+
+export default function TurbineChart({ turbines, userPoint }: TurbineChartProps) {
   return (
     <ScatterChart
       width={600}
