@@ -10,11 +10,23 @@ import {
   ReferenceArea,
 } from "recharts";
 
+type Turbine = {
+  type: string;
+  qMin: number;
+  qMax: number;
+  hMin: number;
+  hMax: number;
+};
+
+type UserPoint = {
+  q: number;
+  h: number;
+};
+
 type TurbineChartProps = {
   turbines: Turbine[];
   userPoint: UserPoint;
 };
-
 
 export default function TurbineChart({ turbines, userPoint }: TurbineChartProps) {
   return (
