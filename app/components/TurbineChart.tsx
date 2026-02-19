@@ -12,10 +12,10 @@ import {
 
 type Turbine = {
   type: string;
-  qMin: number;
-  qMax: number;
-  hMin: number;
-  hMax: number;
+  q_min: number;
+  q_max: number;
+  h_min: number;
+  h_max: number;
 };
 
 type UserPoint = {
