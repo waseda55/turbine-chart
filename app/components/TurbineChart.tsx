@@ -10,6 +10,11 @@ import {
   ReferenceArea,
 } from "recharts";
 
+type TurbineChartProps = {
+  turbines: Turbine[];
+  userPoint: UserPoint;
+};
+
 export default function TurbineChart({ turbines, userPoint }) {
   return (
     <ScatterChart
