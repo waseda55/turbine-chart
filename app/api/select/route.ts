@@ -1,43 +1,76 @@
-import { supabase } from "@/lib/supabaseClient";
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs";
-
-export async function GET(request: Request) {
+export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const Q = searchParams.get("Q");
-    const H = searchParams.get("H");
-    const freq = searchParams.get("freq");
+    const { searchParams } = new URL(req.url);
+    const Q = Number(searchParams.get("Q"));
+    const H = Number(searchParams.get("H"));
+    const freq = searchParams.get("freq") ?? "50";
 
-    const q = parseFloat(Q || "0");
-    const h = parseFloat(H || "0");
-
-    console.log("Q, H, freq:", q, h, freq);
-
-    const { data, error } = await supabase
-      .from("turbines")
-      .select("*")
-      .lte("q_min", q)  // q_min <= Q
-      .gte("q_max", q)  // q_max >= Q
-      .lte("h_min", h)  // h_min <= H
-      .gte("h_max", h); // h_max >= H
-
-    console.log("Matched:", data);
-    console.log("Supabase error:", error);
-
-    if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+    if (!Q || !H) {
+      return NextResponse.json(
+        { error: "Q と H は必須です" },
+        { status: 400 }
+      );
     }
 
-    return Response.json(
-      {
-        matched: data,
-        freq,
-      },
-      { status: 200 }
+    // Supabase クライアント
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-  } catch (e: any) {
-    console.error("API Error:", e);
-    return Response.json({ error: e.message }, { status: 500 });
+
+    // 水車データ取得
+    const { data: turbines, error } = await supabase
+      .from("turbines")
+      .select("*");
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json(
+        { error: "データ取得に失敗しました" },
+        { status: 500 }
+      );
+    }
+
+    // Q-H 条件に合う水車を抽出
+    const matched = turbines.filter((t) => {
+      return Q >= t.q_min && Q <= t.q_max && H >= t.h_min && H <= t.h_max;
+    });
+
+    if (matched.length === 0) {
+      return NextResponse.json({
+        matched: [],
+        best: null,
+      });
+    }
+
+    // 最適水車（とりあえず最初の1件）
+    const bestTurbine = matched[0];
+
+    // 効率曲線（JSON 文字列 → 配列）
+    let parsedCurve = [];
+    try {
+      parsedCurve = JSON.parse(bestTurbine.efficiency_curve_json);
+    } catch (e) {
+      console.error("効率曲線の JSON パースに失敗:", e);
+    }
+
+    // 最終レスポンス
+    return NextResponse.json({
+      matched,
+      best: {
+        ...bestTurbine,
+        efficiency_curve: parsedCurve,
+      },
+    });
+
+  } catch (e) {
+    console.error("API error:", e);
+    return NextResponse.json(
+      { error: "サーバーエラー" },
+      { status: 500 }
+    );
   }
 }

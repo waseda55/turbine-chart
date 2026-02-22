@@ -10,6 +10,8 @@ import {
   YAxis,
   Tooltip,
   ReferenceArea,
+  Line,
+  LineChart
 } from "recharts";
 
 export default function ResultPageInner() {
@@ -217,15 +219,48 @@ export default function ResultPageInner() {
               </div>
             </div>
 
-            {/* 効率曲線（未実装） */}
+            {/* 効率曲線（η–Q） */}
             <div className="bg-white/70 backdrop-blur-md shadow-md border border-sky-100 rounded-xl p-6">
               <h2 className="text-lg font-medium text-slate-700 mb-4">
                 効率曲線（η–Q）
               </h2>
 
-              <div className="h-64 bg-slate-200 rounded-lg flex items-center justify-center text-slate-500">
-                （ここに効率曲線が入ります）
-              </div>
+              {data?.best?.efficiency_curve ? (
+                <div style={{ width: "100%", height: 300 }}>
+                  <ResponsiveContainer>
+                    <LineChart
+                      data={Object.values(data.best.efficiency_curve)}
+                      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                    >
+                      <XAxis
+                        dataKey="flow"
+                        name="流量 Q"
+                        unit="m³/s"
+                        type="number"
+                      />
+                      <YAxis
+                        dataKey="efficiency"
+                        name="効率 η"
+                        unit="%"
+                        type="number"
+                        domain={[0, 100]}
+                      />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="efficiency"
+                        stroke="#2563eb"
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-64 bg-slate-200 rounded-lg flex items-center justify-center text-slate-500">
+                  効率曲線データがありません
+                </div>
+              )}
             </div>
 
           </div>
