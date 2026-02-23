@@ -11,7 +11,9 @@ import {
   Tooltip,
   ReferenceArea,
   Line,
-  LineChart
+  LineChart,
+  Label,
+  Legend
 } from "recharts";
 
 export default function ResultPageInner() {
@@ -177,19 +179,25 @@ export default function ResultPageInner() {
                       type="number"
                       dataKey="q"
                       name="流量 Q"
-                      unit="m³/s"
+                      unit=""
                       scale="log"
-                      domain={[0.1, 10]}
-                    />
-
+                      domain={[0.1, 100]}>
+                      <Label value="流量 Q [m³/s]" position="insideBottom" offset={-20} />
+                    </XAxis>
                     <YAxis
                       type="number"
                       dataKey="h"
                       name="落差 H"
-                      unit="m"
+                      unit=""
                       scale="log"
-                      domain={[1, 100]}
-                    />
+                      domain={[1, 100]}>
+                      <Label
+                        value="落差 H (m)"
+                        angle={-90}
+                        position="insideLeft"
+                        offset={-10}
+                      />
+                      </YAxis>
 
                     {Object.keys(grouped).map((type) =>
                       grouped[type].map((turbine: any, index: number) => (
@@ -221,10 +229,9 @@ export default function ResultPageInner() {
 
             {/* 効率曲線（η–Q） */}
             <div className="bg-white/70 backdrop-blur-md shadow-md border border-sky-100 rounded-xl p-6">
-              <h2 className="text-lg font-medium text-slate-700 mb-4">
-                効率曲線（η–Q）
-              </h2>
-
+              <p className="text-slate-500 mb-2">
+                対象水車：{data?.best?.name}
+              </p>
               {data?.best?.efficiency_curve ? (
                 <div style={{ width: "100%", height: 300 }}>
                   <ResponsiveContainer>
@@ -235,17 +242,25 @@ export default function ResultPageInner() {
                       <XAxis
                         dataKey="flow"
                         name="流量 Q"
-                        unit="m³/s"
-                        type="number"
-                      />
+                        unit=""
+                        type="number">
+                        <Label value="流量 Q [m³/s]" position="insideBottom" offset={-15} />
+                      </XAxis>
                       <YAxis
                         dataKey="efficiency"
                         name="効率 η"
-                        unit="%"
+                        unit=""
                         type="number"
-                        domain={[0, 100]}
+                        domain={[0, 100]}>
+                        <Label
+                        value="効率 η [%]"
+                        angle={-90}
+                        position="insideLeft"
+                        offset={-10}
                       />
+                      </YAxis>
                       <Tooltip />
+                      <Legend verticalAlign="top" height={36} />
                       <Line
                         type="monotone"
                         dataKey="efficiency"
