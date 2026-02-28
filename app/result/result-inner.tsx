@@ -72,7 +72,7 @@ export default function ResultPageInner() {
     }, {});
   }
 
-  const logTicks = [];
+  const logTicks: number[] = [];
   for (let exp = -1; exp <= 4; exp++) {
     [1, 2, 5].forEach(m => {
     logTicks.push(m * 10 ** exp);
@@ -343,7 +343,7 @@ export default function ResultPageInner() {
                     dataKey="q"
                     name="流量 Q (m³/s)"
                     unit=""
-                    tick={logTicks}
+                    ticks={logTicks}
                     scale="log"
                     domain={[0.1, 1000]}
                   >
