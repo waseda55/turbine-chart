@@ -10,6 +10,7 @@ import {
   YAxis,
   Tooltip,
   ReferenceArea,
+  CartesianGrid,
   Line,
   LineChart,
   Label,
@@ -25,6 +26,8 @@ export default function ResultPageInner() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [openTypes, setOpenTypes] = useState<string[]>([]);
+
+  const [selectedTurbine, setSelectedTurbine] = useState<any>(null);
 
   const toggleType = (type: string) => {
     setOpenTypes((prev) =>
@@ -68,6 +71,13 @@ export default function ResultPageInner() {
       return acc;
     }, {});
   }
+
+  const logTicks = [];
+  for (let exp = -1; exp <= 4; exp++) {
+    [1, 2, 5].forEach(m => {
+    logTicks.push(m * 10 ** exp);
+    });
+  }  
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 via-sky-100 to-slate-100 p-6">
@@ -133,164 +143,274 @@ export default function ResultPageInner() {
 
                     {isOpen && (
                       <div className="mt-3 space-y-4">
-                        {grouped[type].map((turbine: any, index: number) => (
-                          <div
-                            key={index}
-                            className="border border-sky-100 bg-white/80 rounded-lg p-4 shadow-sm"
-                          >
-                            <p className="text-lg font-semibold text-slate-800">
-                              {turbine.name}
-                            </p>
 
-                            <p className="text-slate-600 mt-1">
-                              {turbine.notes ?? "説明文はありません。"}
-                            </p>
+                        {(() => {
+                          const sorted = [...grouped[type]].sort((a, b) => {
+                            if (a.id === data.best?.id) return -1;
+                            if (b.id === data.best?.id) return 1;
+                            return 0;
+                          });
 
-                            <div className="grid grid-cols-2 gap-4 mt-3 text-sm text-slate-600">
-                              <div>
-                                <p className="text-slate-500">Q 範囲</p>
-                                <p>{turbine.q_min} 〜 {turbine.q_max} m³/s</p>
-                              </div>
-                              <div>
-                                <p className="text-slate-500">H 範囲</p>
-                                <p>{turbine.h_min} 〜 {turbine.h_max} m</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          return (
+                            <>
+                              {/* カード一覧 */}
+                              {sorted.map((turbine: any, index: number) => {
+                                const isBest = turbine.id === data.best?.id;
+
+                                return (
+                                  <div
+                                    key={index}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedTurbine(turbine);
+                                    }}
+                                    className={`
+                                      relative border rounded-lg p-4 shadow-sm transition cursor-pointer
+                                      hover:bg-sky-50 hover:shadow-lg
+                                      ${isBest ? "bg-blue-50 border-blue-400" : "bg-white border-slate-200"}
+                                    `}
+                                  >
+                                    <div
+                                      className={`
+                                        absolute left-0 top-0 h-full w-1 rounded-l-lg
+                                        ${isBest ? "bg-blue-500" : "bg-slate-300"}
+                                      `}
+                                    />
+
+                                    <p className="text-lg font-semibold text-slate-800">
+                                      {turbine.name}
+                                      {isBest && <span className="ml-2 text-blue-600 font-bold">（推奨）</span>}
+                                    </p>
+
+                                    <p className="text-slate-600 mt-1 line-clamp-2">
+                                      {turbine.notes ?? "説明文はありません。"}
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4 mt-3 text-sm text-slate-700">
+                                      <div>
+                                        <p className="text-slate-500">Q 範囲</p>
+                                        <p className="font-semibold">{turbine.q_min} 〜 {turbine.q_max} m³/s</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-slate-500">H 範囲</p>
+                                        <p className="font-semibold">{turbine.h_min} 〜 {turbine.h_max} m</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              {/* 比較表 */}
+                              <table className="w-full mt-6 text-sm border-collapse">
+                                <thead>
+                                  <tr className="bg-slate-100 text-slate-700">
+                                    <th className="border px-2 py-1">モデル名</th>
+                                    <th className="border px-2 py-1">Q 範囲 (m³/s)</th>
+                                    <th className="border px-2 py-1">H 範囲 (m)</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {sorted.map((turbine: any) => {
+                                    const isBest = turbine.id === data.best?.id;
+
+                                    return (
+                                      <tr
+                                        key={turbine.id}
+                                        className={isBest ? "bg-blue-50 font-semibold" : ""}
+                                      >
+                                        <td className="border px-2 py-1">{turbine.name}</td>
+                                        <td className="border px-2 py-1">
+                                          {turbine.q_min} 〜 {turbine.q_max}
+                                        </td>
+                                        <td className="border px-2 py-1">
+                                          {turbine.h_min} 〜 {turbine.h_max}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </>
+                          );
+                        })()}
+
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
+          </div>
+        )}
+      </div>
+      {selectedTurbine && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-xl relative animate-fadeIn">
 
-            {/* Q-H マップ */}
-            <div className="bg-white/70 backdrop-blur-md shadow-md border border-sky-100 rounded-xl p-6">
-              <h2 className="text-lg font-medium text-slate-700 mb-4">
-                Q–H マップ
-              </h2>
+            {/* 閉じるボタン */}
+            <button
+              onClick={() => setSelectedTurbine(null)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-700 text-2xl"
+            >
+              ×
+            </button>
 
-              <div style={{ width: "100%", height: 400 }}>
-                <ResponsiveContainer>
-                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            {/* タイトル */}
+            <h2 className="text-3xl font-semibold text-slate-800 mb-2">
+              {selectedTurbine.name}
+            </h2>
 
-                    <XAxis
-                      type="number"
-                      dataKey="q"
-                      name="流量 Q"
-                      unit=""
-                      scale="log"
-                      domain={[0.1, 100]}>
-                      <Label value="流量 Q [m³/s]" position="insideBottom" offset={-20} />
-                    </XAxis>
-                    <YAxis
-                      type="number"
-                      dataKey="h"
-                      name="落差 H"
-                      unit=""
-                      scale="log"
-                      domain={[1, 100]}>
-                      <Label
-                        value="落差 H (m)"
-                        angle={-90}
-                        position="insideLeft"
-                        offset={-10}
-                      />
-                      </YAxis>
+            {/* 推奨バッジ */}
+            {selectedTurbine.id === data.best?.id && (
+              <p className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                推奨モデル（Best）
+              </p>
+            )}
 
-                    {Object.keys(grouped).map((type) =>
-                      grouped[type].map((turbine: any, index: number) => (
-                        <ReferenceArea
-                          key={`${type}-${index}`}
-                          x1={Number(turbine.q_min)}
-                          x2={Number(turbine.q_max)}
-                          y1={Number(turbine.h_min)}
-                          y2={Number(turbine.h_max)}
-                          fill={typeColors[type] ?? "rgba(148,163,184,0.3)"}
-                          stroke={typeColors[type]?.replace("0.3", "1")}
-                          strokeOpacity={0.6}
-                        />
-                      ))
-                    )}
+            {/* 説明文 */}
+            <p className="text-slate-700 leading-relaxed mb-6">
+              {selectedTurbine.notes ?? "説明文はありません。"}
+            </p>
 
-                    <Scatter
-                      name="入力点"
-                      data={[{ q: Number(Q), h: Number(H) }]}
-                      fill="red"
-                      shape="cross"
-                    />
+            {/* セクションタイトル */}
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">
+              基本情報
+            </h3>
 
-                    <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-                  </ScatterChart>
-                </ResponsiveContainer>
+            {/* 情報カード */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+              <div className="grid grid-cols-2 gap-4 text-sm text-slate-700">
+
+                <div>
+                  <p className="text-slate-500">型式</p>
+                  <p className="font-semibold">{selectedTurbine.type ?? "不明"}</p>
+                </div>
+
+                <div>
+                  <p className="text-slate-500">流量 Q 範囲</p>
+                  <p className="font-semibold">
+                    {selectedTurbine.q_min} 〜 {selectedTurbine.q_max} m³/s
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-slate-500">落差 H 範囲</p>
+                  <p className="font-semibold">
+                    {selectedTurbine.h_min} 〜 {selectedTurbine.h_max} m
+                  </p>
+                </div>
+
+                {selectedTurbine.design_Q && (
+                  <div>
+                    <p className="text-slate-500">設計流量</p>
+                    <p className="font-semibold">{selectedTurbine.design_Q} m³/s</p>
+                  </div>
+                )}
+
+                {selectedTurbine.design_H && (
+                  <div>
+                    <p className="text-slate-500">設計落差</p>
+                    <p className="font-semibold">{selectedTurbine.design_H} m</p>
+                  </div>
+                )}
+
+                {selectedTurbine.efficiency && (
+                  <div>
+                    <p className="text-slate-500">最高効率</p>
+                    <p className="font-semibold">{selectedTurbine.efficiency}%</p>
+                  </div>
+                )}
+
               </div>
             </div>
 
-            {/* 効率曲線（η–Q） */}
-            <div className="bg-white/70 backdrop-blur-md shadow-md border border-sky-100 rounded-xl p-6">
-              <p className="text-slate-500 mb-2">
-                対象水車：{data?.best?.name}
+            {/* ─ Q–H ミニチャート ─ */}
+            <h3 className="text-lg font-semibold text-slate-800 mt-8 mb-3">
+              Q–H マップ
+            </h3>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <ResponsiveContainer width="100%" height={240}>
+                <ScatterChart
+                  margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
+                >
+                  {/* グリッド */}
+                  <CartesianGrid strokeDasharray="3 3" />
+
+                  {/* X軸（流量 Q） */}
+                  <XAxis
+                    type="number"
+                    dataKey="q"
+                    name="流量 Q (m³/s)"
+                    unit=""
+                    tick={logTicks}
+                    scale="log"
+                    domain={[0.1, 1000]}
+                  >
+                    <Label value="流量 Q (m³/s)" offset={-5} position="insideBottom" />
+                  </XAxis>
+
+                  {/* Y軸（落差 H） */}
+                  <YAxis
+                    type="number"
+                    dataKey="h"
+                    name="落差 H (m)"
+                    unit=""
+                    scale="log"
+                    domain={[1, 100]}
+                  >
+                    <Label
+                      value="落差 H (m)"
+                      angle={-90}
+                      position="insideLeft"
+                      offset={10}
+                    />
+                  </YAxis>
+
+                  {/* 入力点 */}
+                  <Scatter
+                    name="入力点"
+                    data={[{ q: Number(Q), h: Number(H) }]}
+                    fill="#ef4444"
+                  />
+
+                  {/* 水車の適用範囲（四角形） */}
+                  <ReferenceArea
+                    x1={selectedTurbine.q_min}
+                    x2={selectedTurbine.q_max}
+                    y1={selectedTurbine.h_min}
+                    y2={selectedTurbine.h_max}
+                    fill="rgba(59, 130, 246, 0.15)"
+                    stroke="rgba(59, 130, 246, 0.6)"
+                  />
+
+                  <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+                  <Legend />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 入力条件との比較 */}
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">
+              入力条件との適合
+            </h3>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-slate-700">
+              <p>
+                入力 Q = <span className="font-semibold">{Q} m³/s</span> は
+                <span className="font-semibold"> {selectedTurbine.q_min}〜{selectedTurbine.q_max} </span>
+                の範囲に入っています。
               </p>
-              {data?.best?.efficiency_curve ? (
-                <div style={{ width: "100%", height: 300 }}>
-                  <ResponsiveContainer>
-                    <LineChart
-                      data={Object.values(data.best.efficiency_curve)}
-                      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                    >
-                      <XAxis
-                        dataKey="flow"
-                        name="流量 Q"
-                        unit=""
-                        type="number">
-                        <Label value="流量 Q [m³/s]" position="insideBottom" offset={-15} />
-                      </XAxis>
-                      <YAxis
-                        dataKey="efficiency"
-                        name="効率 η"
-                        unit=""
-                        type="number"
-                        domain={[0, 100]}>
-                        <Label
-                        value="効率 η [%]"
-                        angle={-90}
-                        position="insideLeft"
-                        offset={-10}
-                      />
-                      </YAxis>
-                      <Tooltip />
-                      <Legend verticalAlign="top" height={36} />
-                      <Line
-                        type="monotone"
-                        dataKey="efficiency"
-                        stroke="#2563eb"
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="h-64 bg-slate-200 rounded-lg flex items-center justify-center text-slate-500">
-                  効率曲線データがありません
-                </div>
-              )}
+              <p className="mt-1">
+                入力 H = <span className="font-semibold">{H} m</span> は
+                <span className="font-semibold"> {selectedTurbine.h_min}〜{selectedTurbine.h_max} </span>
+                の範囲に入っています。
+              </p>
             </div>
 
           </div>
-        )}
-
-        <div className="text-center mt-10">
-          <a
-            href="/"
-            className="text-sky-600 hover:text-sky-700 font-medium underline"
-          >
-            入力画面に戻る
-          </a>
         </div>
-
-      </div>
+      )}
     </main>
   );
 }
