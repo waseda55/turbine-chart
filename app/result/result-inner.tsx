@@ -74,11 +74,11 @@ export default function ResultPageInner() {
   }
 
   const logTicks: number[] = [];
-  for (let exp = -1; exp <= 3; exp++) {
+  for (let exp = -1; exp <= 1; exp++) {
     [1, 2, 5].forEach(m => {
-    logTicks.push(m * 10 ** exp);
+      logTicks.push(m * 10 ** exp);
     });
-  }  
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 via-sky-100 to-slate-100 p-6">
@@ -346,7 +346,7 @@ export default function ResultPageInner() {
                     unit=""
                     ticks={logTicks}
                     scale="log"
-                    domain={[0.1, 1000]}
+                    domain={[0.1, 50]}
                   >
                     <Label value="流量 Q (m³/s)" offset={-5} position="insideBottom" />
                   </XAxis>
@@ -374,8 +374,18 @@ export default function ResultPageInner() {
                     data={[{ q: Number(Q), h: Number(H) }]}
                     fill="#ef4444"
                     legendType="circle"
+                    shape={(props) => (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={7}
+                        fill="#ef4444"
+                        stroke="white"
+                        strokeWidth={2}
+                        style={{ filter: "drop-shadow(0 0 4px rgba(0,0,0,0.3))" }}
+                      />
+                    )}
                   />
-
                   {/* 水車の適用範囲（四角形） */}
                   <ReferenceArea
                     x1={selectedTurbine.q_min}
@@ -391,31 +401,45 @@ export default function ResultPageInner() {
                     align="right"
                     wrapperStyle={{
                       position: "absolute",
-                      top: "1%",
-                      left: "80%",
+                      top: "15%",
+                      left: "85%",
                       padding: "4px 8px",
                     }}
                     content={({ payload }) => {
                       if (!payload) return null;
-                      <div style={{ display: "flex", gap: "12px", padding: "4px" }}>
-                        {payload.map((entry, index) => (
-                          <div key={index} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            {/* Scatter と同じ大きさの赤丸 */}
-                            <svg width="12" height="12">
-                              <circle cx="6" cy="6" r="4" fill={entry.color} />
-                            </svg>
-
-                            {/* 凡例の説明（Scatter の name） */}
-                            <span style={{ fontSize: "12px" }}>{entry.value}</span>
-                          </div>
-                        ))}
-                      </div>
+                      return (
+                        <div style={{ display: "flex", gap: "12px", padding: "4px" }}>
+                          {payload.map((entry, index) => (
+                            <div key={index} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <svg width="12" height="12">
+                                <circle cx="6" cy="6" r="4" fill={entry.color} />
+                              </svg>
+                              <span style={{ fontSize: "12px" }}>{entry.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
                     }}
                   />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
 
+            {/* 効率曲線グラフ */}
+            {selectedTurbine.efficiency_curve && (
+              <div className="mt-10">
+                <h3 className="text-lg font-semibold mb-2">効率曲線（η–Q）</h3>
+
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={selectedTurbine.efficiency_curve}>
+                    <XAxis dataKey="flow" label={{ value: "Q", position: "insideBottom", dy: 10 }} />
+                    <YAxis dataKey="efficiency" label={{ value: "効率(%)", angle: -90, position: "insideLeft" }} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="efficiency" stroke="#10b981" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             {/* 入力条件との比較 */}
             <h3 className="text-lg font-semibold text-slate-800 mb-2">
               入力条件との適合

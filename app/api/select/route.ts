@@ -6,7 +6,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const Q = Number(searchParams.get("Q"));
     const H = Number(searchParams.get("H"));
-    const freq = searchParams.get("freq") ?? "50";
 
     if (!Q || !H) {
       return NextResponse.json(
@@ -15,31 +14,34 @@ export async function GET(req: Request) {
       );
     }
 
-    // Supabase クライアント
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // 水車データ取得
-    const { data: turbines, error } = await supabase
+    // Q-H 条件に合う水車を取得
+    const { data, error } = await supabase
       .from("turbines")
-      .select("*");
+      .select("*")
+      .lte("q_min", Q)
+      .gte("q_max", Q)
+      .lte("h_min", H)
+      .gte("h_max", H);
 
     if (error) {
-      console.error("Supabase error:", error);
-      return NextResponse.json(
-        { error: "データ取得に失敗しました" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Q-H 条件に合う水車を抽出
-    const matched = turbines.filter((t) => {
-      return Q >= t.q_min && Q <= t.q_max && H >= t.h_min && H <= t.h_max;
-    });
+    // 効率曲線をパース
+    const parsed = data.map((row) => ({
+      ...row,
+      efficiency_curve: row.efficiency_curve_json
+        ? JSON.parse(row.efficiency_curve_json)
+        : null,
+    }));
 
-    if (matched.length === 0) {
+    // 候補がゼロならそのまま返す
+    if (parsed.length === 0) {
       return NextResponse.json({
         matched: [],
         best: null,
@@ -47,23 +49,11 @@ export async function GET(req: Request) {
     }
 
     // 最適水車（とりあえず最初の1件）
-    const bestTurbine = matched[0];
+    const bestTurbine = parsed[0];
 
-    // 効率曲線（JSON 文字列 → 配列）
-    let parsedCurve = [];
-    try {
-      parsedCurve = JSON.parse(bestTurbine.efficiency_curve_json);
-    } catch (e) {
-      console.error("効率曲線の JSON パースに失敗:", e);
-    }
-
-    // 最終レスポンス
     return NextResponse.json({
-      matched,
-      best: {
-        ...bestTurbine,
-        efficiency_curve: parsedCurve,
-      },
+      matched: parsed,
+      best: bestTurbine,
     });
 
   } catch (e) {
