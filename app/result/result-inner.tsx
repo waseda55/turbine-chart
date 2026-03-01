@@ -246,12 +246,12 @@ export default function ResultPageInner() {
       </div>
       {selectedTurbine && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-xl relative animate-fadeIn">
+          <div className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
 
             {/* 閉じるボタン */}
             <button
               onClick={() => setSelectedTurbine(null)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-700 text-2xl"
+              className="absolute top-3 right-3 text-slate-500 hover:text-slate-700 text-2xl"
             >
               ×
             </button>
@@ -331,7 +331,7 @@ export default function ResultPageInner() {
             </h3>
 
             <div className="relative bg-white border border-slate-200 rounded-xl p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={300}>
                 <ScatterChart
                   margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
                 >
