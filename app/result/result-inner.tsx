@@ -374,7 +374,6 @@ export default function ResultPageInner() {
                     data={[{ q: Number(Q), h: Number(H) }]}
                     fill="#ef4444"
                     legendType="circle"
-                    legendIconSize={1}   // ← ここで凡例の赤丸サイズを調整
                   />
 
                   {/* 水車の適用範囲（四角形） */}
@@ -396,7 +395,8 @@ export default function ResultPageInner() {
                       left: "80%",
                       padding: "4px 8px",
                     }}
-                    content={({ payload }) => (
+                    content={({ payload }) => {
+                      if (!payload) return null;
                       <div style={{ display: "flex", gap: "12px", padding: "4px" }}>
                         {payload.map((entry, index) => (
                           <div key={index} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -410,7 +410,7 @@ export default function ResultPageInner() {
                           </div>
                         ))}
                       </div>
-                    )}
+                    }}
                   />
                 </ScatterChart>
               </ResponsiveContainer>
