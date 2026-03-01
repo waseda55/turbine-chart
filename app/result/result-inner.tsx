@@ -14,7 +14,8 @@ import {
   Line,
   LineChart,
   Label,
-  Legend
+  Legend,
+  ReferenceDot
 } from "recharts";
 
 export default function ResultPageInner() {
@@ -73,7 +74,7 @@ export default function ResultPageInner() {
   }
 
   const logTicks: number[] = [];
-  for (let exp = -1; exp <= 4; exp++) {
+  for (let exp = -1; exp <= 3; exp++) {
     [1, 2, 5].forEach(m => {
     logTicks.push(m * 10 ** exp);
     });
@@ -329,8 +330,8 @@ export default function ResultPageInner() {
               Q–H マップ
             </h3>
 
-            <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <ResponsiveContainer width="100%" height={240}>
+            <div className="relative bg-white border border-slate-200 rounded-xl p-4">
+              <ResponsiveContainer width="100%" height={400}>
                 <ScatterChart
                   margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
                 >
@@ -372,6 +373,8 @@ export default function ResultPageInner() {
                     name="入力点"
                     data={[{ q: Number(Q), h: Number(H) }]}
                     fill="#ef4444"
+                    legendType="circle"
+                    legendIconSize={1}   // ← ここで凡例の赤丸サイズを調整
                   />
 
                   {/* 水車の適用範囲（四角形） */}
@@ -383,9 +386,32 @@ export default function ResultPageInner() {
                     fill="rgba(59, 130, 246, 0.15)"
                     stroke="rgba(59, 130, 246, 0.6)"
                   />
-
                   <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-                  <Legend />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    wrapperStyle={{
+                      position: "absolute",
+                      top: "1%",
+                      left: "80%",
+                      padding: "4px 8px",
+                    }}
+                    content={({ payload }) => (
+                      <div style={{ display: "flex", gap: "12px", padding: "4px" }}>
+                        {payload.map((entry, index) => (
+                          <div key={index} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            {/* Scatter と同じ大きさの赤丸 */}
+                            <svg width="12" height="12">
+                              <circle cx="6" cy="6" r="4" fill={entry.color} />
+                            </svg>
+
+                            {/* 凡例の説明（Scatter の name） */}
+                            <span style={{ fontSize: "12px" }}>{entry.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
