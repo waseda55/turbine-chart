@@ -332,9 +332,9 @@ export default function ResultPageInner() {
 
             <div className="relative bg-white border border-slate-200 rounded-xl p-4">
               <ResponsiveContainer width="100%" height={300}>
-                <ScatterChart
-                  margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
-                >
+                  <ScatterChart
+                    margin={{ top: -30, right: 20, bottom: 40, left: 60 }}
+                  >
                   {/* グリッド */}
                   <CartesianGrid strokeDasharray="3 3" />
 
@@ -348,7 +348,12 @@ export default function ResultPageInner() {
                     scale="log"
                     domain={[0.1, 50]}
                   >
-                    <Label value="流量 Q (m³/s)" offset={-5} position="insideBottom" />
+                  <Label
+                    value="流量 Q (m³/s)"
+                    offset={-5}
+                    position="insideBottom"
+                    style={{ fontWeight: 600, fill: "#334155" }}
+                  />
                   </XAxis>
 
                   {/* Y軸（落差 H） */}
@@ -360,12 +365,13 @@ export default function ResultPageInner() {
                     scale="log"
                     domain={[1, 100]}
                   >
-                    <Label
-                      value="落差 H (m)"
-                      angle={-90}
-                      position="insideLeft"
-                      offset={10}
-                    />
+                  <Label
+                    value="落差 H (m)"
+                    angle={-90}
+                    position="insideLeft"
+                    offset={20}   // ← 10 → 20 に増やす
+                    style={{ fontWeight: 600, fill: "#334155" }}
+                  />
                   </YAxis>
 
                   {/* 入力点 */}
@@ -392,33 +398,19 @@ export default function ResultPageInner() {
                     x2={selectedTurbine.q_max}
                     y1={selectedTurbine.h_min}
                     y2={selectedTurbine.h_max}
-                    fill="rgba(59, 130, 246, 0.15)"
-                    stroke="rgba(59, 130, 246, 0.6)"
+                    fill="rgba(59, 130, 246, 0.08)"
+                    stroke="rgba(59, 130, 246, 0.7)"
+                    strokeWidth={2}
                   />
                   <Tooltip cursor={{ strokeDasharray: "3 3" }} />
                   <Legend
                     verticalAlign="top"
                     align="right"
                     wrapperStyle={{
-                      position: "absolute",
-                      top: "15%",
-                      left: "85%",
+                      background: "rgba(255,255,255,0.9)",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "6px",
                       padding: "4px 8px",
-                    }}
-                    content={({ payload }) => {
-                      if (!payload) return null;
-                      return (
-                        <div style={{ display: "flex", gap: "12px", padding: "4px" }}>
-                          {payload.map((entry, index) => (
-                            <div key={index} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <svg width="12" height="12">
-                                <circle cx="6" cy="6" r="4" fill={entry.color} />
-                              </svg>
-                              <span style={{ fontSize: "12px" }}>{entry.value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
                     }}
                   />
                 </ScatterChart>
@@ -431,11 +423,49 @@ export default function ResultPageInner() {
                 <h3 className="text-lg font-semibold mb-2">効率曲線（η–Q）</h3>
 
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={selectedTurbine.efficiency_curve}>
-                    <XAxis dataKey="flow" label={{ value: "Q", position: "insideBottom", dy: 10 }} />
-                    <YAxis dataKey="efficiency" label={{ value: "効率(%)", angle: -90, position: "insideLeft" }} />
+                  <LineChart data={selectedTurbine.efficiency_curve}
+                    margin={{ top: -30, right: 20, bottom: 40, left: 150 }}
+                  >
+                    <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="flow"
+                      label={{
+                        value: "流量 Q (m³/s)",
+                        position: "insideBottom",
+                        offset: -5,
+                        style: { fontWeight: 600, fill: "#334155" }
+                      }}
+                    />
+                    <YAxis
+                      dataKey="efficiency"
+                      label={{
+                        value: "効率 (%)",
+                        angle: -90,
+                        position: "insideLeft",
+                        offset: 10,
+                        style: { fontWeight: 600, fill: "#334155" }
+                      }}
+                    />
                     <Tooltip />
-                    <Line type="monotone" dataKey="efficiency" stroke="#10b981" strokeWidth={2} dot={false} />
+                    <Line
+                      type="monotone"
+                      dataKey="efficiency"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      dot={false}
+                      name="効率曲線"
+                      style={{ filter: "drop-shadow(0 0 3px rgba(0,0,0,0.2))" }}
+                    />
+                    <Legend
+                      verticalAlign="top"
+                      align="right"
+                      wrapperStyle={{
+                        background: "rgba(255,255,255,0.9)",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                      }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
