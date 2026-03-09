@@ -51,6 +51,23 @@ export default function Home() {
             />
           </div>
 
+          {/* 比速度 Ns（追加） */}
+          <div>
+            <label className="block text-slate-700 font-medium mb-1">
+              比速度 Ns
+            </label>
+            <input
+              type="number"
+              step="1"
+              name="Ns"
+              className="w-full border border-sky-200 rounded-lg p-3 text-slate-800 
+                        focus:outline-none focus:ring-2 focus:ring-sky-300 bg-white/70"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              ※ Ns は Q・H・周波数から result ページで自動計算されます
+            </p>
+          </div>
+
           {/* 電源周波数 */}
           <div>
             <label className="block text-slate-700 font-medium mb-1">
